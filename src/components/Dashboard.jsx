@@ -134,7 +134,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
       
       {/* --- HEADER --- */}
       <header className="fixed top-0 w-full z-30 border-b border-neutral-800 bg-black/50 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
             <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-gradient-to-br from-gray-800 to-black rounded-xl flex items-center justify-center shadow-lg shadow-black/20 text-white">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,10 +143,10 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                 </div>
                 <span className="font-bold text-xl tracking-tight">Listr</span>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 md:gap-6">
                 <button onClick={() => setIsReportOpen(true)} className="text-gray-400 hover:text-white text-sm font-medium transition flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    Report
+                    <span className="hidden md:inline">Report</span>
                 </button>
                 <button onClick={onLogout} className="text-gray-400 hover:text-red-400 text-sm font-medium transition flex items-center gap-2">
                     Logout
@@ -156,60 +156,64 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
       </header>
 
       {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-32 pb-20 flex flex-col items-center">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center">
         
         {/* Title */}
-        <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold mb-3 tracking-tight">Welcome, {user.name}!</h1>
+        <div className="text-center mb-10 md:mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Welcome, {user.name}!</h1>
             <p className="text-gray-500 text-lg">What is your main focus for today?</p>
         </div>
 
-        {/* Input Row */}
-        <div className="w-full flex gap-3 mb-12">
+        {/* --- INPUT SECTION (RESPONSIVE FIX) --- */}
+        <div className="w-full flex flex-col md:flex-row gap-3 mb-10 md:mb-12">
+            
+            {/* 1. Text Input (Full width on mobile, Flex on desktop) */}
             <input 
               type="text" 
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
               placeholder="Enter a task" 
-              className="flex-1 bg-white text-black rounded-xl px-6 py-4 text-lg outline-none focus:ring-4 focus:ring-purple-900/50 placeholder-gray-400 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+              className="w-full md:flex-1 bg-white text-black rounded-xl px-6 py-4 text-lg outline-none focus:ring-4 focus:ring-purple-900/50 placeholder-gray-400 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
             />
             
-            {/* BUTTON TO TRIGGER TIME MODAL */}
-            <button 
-              onClick={() => setIsTimePickerOpen(true)}
-              className="bg-neutral-900 text-white border border-neutral-800 rounded-xl px-4 py-4 w-32 text-lg font-medium hover:border-[#6600FF] transition-colors flex items-center justify-center gap-2"
-            >
-               {newTaskTime ? (
-                 <span className="text-[#6600FF]">{newTaskTime.format('h:mm A')}</span>
-               ) : (
-                 <span className="text-gray-400">Set Time</span>
-               )}
-            </button>
+            {/* 2. Button Group (Side-by-side on mobile, Flex on desktop) */}
+            <div className="flex gap-3 w-full md:w-auto">
+                <button 
+                  onClick={() => setIsTimePickerOpen(true)}
+                  className="flex-1 md:w-32 bg-neutral-900 text-white border border-neutral-800 rounded-xl px-4 py-4 text-lg font-medium hover:border-[#6600FF] transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                   {newTaskTime ? (
+                     <span className="text-[#6600FF]">{newTaskTime.format('h:mm A')}</span>
+                   ) : (
+                     <span className="text-gray-400">Set Time</span>
+                   )}
+                </button>
 
-            <button 
-              onClick={handleAddTask}
-              className="bg-[#6200ea] hover:bg-[#5000c2] text-white font-bold rounded-xl px-8 py-4 text-lg transition-all shadow-[0_0_20px_rgba(98,0,234,0.4)] hover:shadow-[0_0_30px_rgba(98,0,234,0.6)] active:scale-95"
-            >
-              Add
-            </button>
+                <button 
+                  onClick={handleAddTask}
+                  className="flex-1 md:w-auto md:px-8 bg-[#6200ea] hover:bg-[#5000c2] text-white font-bold rounded-xl py-4 text-lg transition-all shadow-[0_0_20px_rgba(98,0,234,0.4)] hover:shadow-[0_0_30px_rgba(98,0,234,0.6)] active:scale-95"
+                >
+                  Add
+                </button>
+            </div>
         </div>
 
         {/* --- TASK LIST --- */}
-        <div className="w-full max-h-[45vh] overflow-y-auto no-scrollbar pr-2">
+        <div className="w-full max-h-[45vh] overflow-y-auto no-scrollbar pr-1">
             {tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-neutral-900 rounded-3xl bg-neutral-950/50">
-                <div className="w-20 h-20 bg-neutral-900 rounded-3xl flex items-center justify-center mb-6">
+            <div className="flex flex-col items-center justify-center py-12 md:py-16 border-2 border-dashed border-neutral-900 rounded-3xl bg-neutral-950/50">
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-neutral-900 rounded-3xl flex items-center justify-center mb-6">
                 <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
                 </div>
-                <h3 className="text-xl font-medium text-white mb-2">No tasks yet</h3>
-                <p className="text-gray-500">Add your first task to get started</p>
+                <h3 className="text-lg md:text-xl font-medium text-white mb-2">No tasks yet</h3>
+                <p className="text-gray-500 text-sm md:text-base">Add your first task to get started</p>
             </div>
             ) : (
             tasks.map(task => (
-                <div key={task.id} className="group flex items-start gap-4 py-6 border-b border-neutral-800 hover:border-neutral-700 transition-colors animate-fade-in">
+                <div key={task.id} className="group flex items-start gap-4 py-5 md:py-6 border-b border-neutral-800 hover:border-neutral-700 transition-colors animate-fade-in">
                 
                 <button onClick={() => toggleTask(task.id)} className="mt-1 flex-shrink-0 transition-transform active:scale-95">
                     {task.completed ? (
@@ -222,7 +226,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                 </button>
                 
                 <div className="flex-1 min-w-0">
-                    <span className={`text-xl font-light block leading-tight ${task.completed ? 'line-through text-gray-600' : 'text-white'}`}>
+                    <span className={`text-lg md:text-xl font-light block leading-tight break-words ${task.completed ? 'line-through text-gray-600' : 'text-white'}`}>
                         {task.content}
                     </span>
 
@@ -238,12 +242,12 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                 </div>
 
                 {task.time && (
-                    <span className="text-gray-500 font-mono text-sm mt-1.5 whitespace-nowrap">
+                    <span className="text-gray-500 font-mono text-xs md:text-sm mt-1.5 whitespace-nowrap">
                         {task.time}
                     </span>
                 )}
 
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => setTaskToEdit(task)} className="p-2 text-neutral-600 hover:text-white transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                     </button>
@@ -268,10 +272,10 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
         </div>
       </footer>
 
-      {/* --- STATIC TIME PICKER MODAL (CUSTOM COLOR #6600FF) --- */}
+      {/* --- STATIC TIME PICKER MODAL --- */}
       {isTimePickerOpen && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsTimePickerOpen(false)}>
-            <div className="bg-neutral-900 rounded-3xl p-6 overflow-hidden shadow-2xl border border-neutral-800" onClick={e => e.stopPropagation()}>
+            <div className="bg-neutral-900 rounded-3xl p-6 overflow-hidden shadow-2xl border border-neutral-800 max-w-full overflow-x-auto" onClick={e => e.stopPropagation()}>
                 <h3 className="text-white font-bold text-center mb-4 text-xl">Pick a Time</h3>
                 <div className="rounded-2xl overflow-hidden bg-[#171717]">
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -291,13 +295,13 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                                 '& .MuiPickersLayout-contentWrapper': { bgcolor: '#171717' },
                                 '& .MuiTimeClock-root': { bgcolor: '#171717' },
                                 '& .MuiClock-clock': { bgcolor: '#262626' },
-                                '& .MuiClock-pin': { bgcolor: '#6600FF' }, // Replaced #a855f7
-                                '& .MuiClockPointer-root': { bgcolor: '#6600FF' }, // Replaced #a855f7
-                                '& .MuiClockPointer-thumb': { border: '16px solid #6600FF', bgcolor: 'white' }, // Replaced #a855f7
+                                '& .MuiClock-pin': { bgcolor: '#6600FF' },
+                                '& .MuiClockPointer-root': { bgcolor: '#6600FF' },
+                                '& .MuiClockPointer-thumb': { border: '16px solid #6600FF', bgcolor: 'white' },
                                 '& .MuiClockNumber-root': { color: 'white' },
                                 '& .MuiTypography-root': { color: 'white' },
-                                '& .MuiPickersToolbar-root': { color: 'white', '& .MuiTypography-root': { color: '#6600FF' } }, // Replaced #a855f7
-                                '& .MuiDialogActions-root': { bgcolor: '#171717', '& button': { color: '#6600FF' } } // Replaced #a855f7
+                                '& .MuiPickersToolbar-root': { color: 'white', '& .MuiTypography-root': { color: '#6600FF' } },
+                                '& .MuiDialogActions-root': { bgcolor: '#171717', '& button': { color: '#6600FF' } }
                             }}
                         />
                     </LocalizationProvider>
