@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient'; // Cloud connection
 // --- MUI IMPORTS ---
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -6,13 +7,11 @@ import { StaticTimePicker } from '@mui/x-date-pickers/StaticTimePicker';
 import dayjs from 'dayjs';
 
 export default function Dashboard({ user, onLogout, onNavigate }) {
-  // --- STATE MANAGEMENT ---
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('listr_tasks');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
+  // --- STATE ---
+  const [tasks, setTasks] = useState([]); // Empty initially, fetches from cloud
+  const [loading, setLoading] = useState(true); // Loading state
   const [activityLog, setActivityLog] = useState(() => {
+    // Keep activity log local for now (or move to DB later)
     const saved = localStorage.getItem('listr_activity');
     return saved ? JSON.parse(saved) : [];
   });
@@ -21,84 +20,144 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
   const [newTask, setNewTask] = useState('');
   const [newTaskTime, setNewTaskTime] = useState(null); 
 
-  // Modals & Widgets
+  // Modals
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isThoughtsOpen, setIsThoughtsOpen] = useState(false);
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
   const [thoughtText, setThoughtText] = useState('');
   
-  // Actions State
+  // Actions
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [activeNote, setActiveNote] = useState(null);
-  
-  // --- EFFECTS ---
-  useEffect(() => {
-    localStorage.setItem('listr_tasks', JSON.stringify(tasks));
-  }, [tasks]);
 
+  // --- 1. FETCH TASKS ON LOAD ---
   useEffect(() => {
-    localStorage.setItem('listr_activity', JSON.stringify(activityLog));
-  }, [activityLog]);
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTasks(data);
+    } catch (error) {
+      alert('Error loading tasks!');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --- HELPERS ---
   const addActivity = (action) => {
     const newLog = { action, time: new Date().toISOString() };
-    setActivityLog(prev => [newLog, ...prev].slice(0, 50));
+    const updatedLog = [newLog, ...activityLog].slice(0, 50);
+    setActivityLog(updatedLog);
+    localStorage.setItem('listr_activity', JSON.stringify(updatedLog));
   };
 
-  const formatTime = (timeStr) => {
-    if (!timeStr) return '';
-    if (timeStr.includes('am') || timeStr.includes('pm')) return timeStr;
-    const [hours, minutes] = timeStr.split(':');
-    const h = parseInt(hours);
-    const ampm = h >= 12 ? 'pm' : 'am'; 
-    const h12 = h % 12 || 12;
-    return `${h12}:${minutes} ${ampm}`;
+  const getUserName = () => {
+    // Fallback since we changed how user is passed
+    return user.email ? user.email.split('@')[0] : 'User';
   };
 
-  // --- ACTIONS ---
-  const handleAddTask = () => {
+  // --- ACTIONS (CLOUD CONNECTED) ---
+
+  const handleAddTask = async () => {
     if (!newTask.trim()) return;
     
     const formattedTime = newTaskTime ? newTaskTime.format('h:mm a') : '';
 
-    const task = {
-      id: Date.now(),
-      content: newTask,
-      time: formattedTime,
-      completed: false,
-      comments: ''
-    };
-    setTasks([task, ...tasks]);
-    addActivity(`Added task: "${task.content}"`);
-    setNewTask('');
-    setNewTaskTime(null);
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([
+          { 
+            content: newTask, 
+            time: formattedTime, 
+            user_id: user.id, // Link task to this user
+            completed: false 
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+
+      // Update UI immediately with data from server
+      setTasks([data[0], ...tasks]);
+      addActivity(`Added task: "${newTask}"`);
+      setNewTask('');
+      setNewTaskTime(null);
+    } catch (error) {
+      alert('Error adding task');
+      console.error(error);
+    }
   };
 
-  const toggleTask = (id) => {
-    setTasks(tasks.map(t => {
-      if (t.id === id) {
-        addActivity(`${!t.completed ? 'Completed' : 'Unchecked'}: "${t.content}"`);
-        return { ...t, completed: !t.completed };
-      }
-      return t;
-    }));
+  const toggleTask = async (id, currentStatus, content) => {
+    try {
+      // Optimistic update (update UI before server responds)
+      setTasks(tasks.map(t => t.id === id ? { ...t, completed: !currentStatus } : t));
+
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      addActivity(`${!currentStatus ? 'Completed' : 'Unchecked'}: "${content}"`);
+    } catch (error) {
+      alert('Error updating task');
+      fetchTasks(); // Revert on error
+    }
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!taskToEdit) return;
-    setTasks(tasks.map(t => t.id === taskToEdit.id ? taskToEdit : t));
-    addActivity(`Updated task: "${taskToEdit.content}"`);
-    setTaskToEdit(null);
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          content: taskToEdit.content, 
+          time: taskToEdit.time, 
+          comments: taskToEdit.comments 
+        })
+        .eq('id', taskToEdit.id);
+
+      if (error) throw error;
+
+      setTasks(tasks.map(t => t.id === taskToEdit.id ? taskToEdit : t));
+      addActivity(`Updated task: "${taskToEdit.content}"`);
+      setTaskToEdit(null);
+    } catch (error) {
+      alert('Error saving edit');
+    }
   };
 
-  const confirmDelete = () => {
-    if (taskToDelete) {
-      const task = tasks.find(t => t.id === taskToDelete);
+  const confirmDelete = async () => {
+    if (!taskToDelete) return;
+    const taskContent = tasks.find(t => t.id === taskToDelete)?.content;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskToDelete);
+
+      if (error) throw error;
+
       setTasks(tasks.filter(t => t.id !== taskToDelete));
-      addActivity(`Deleted task: "${task?.content}"`);
+      addActivity(`Deleted task: "${taskContent}"`);
       setTaskToDelete(null);
+    } catch (error) {
+      alert('Error deleting task');
     }
   };
 
@@ -110,7 +169,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
       const response = await fetch(FORM_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: thoughtText, user: user.name })
+        body: JSON.stringify({ message: thoughtText, user: user.email })
       });
       if (response.ok) {
         addActivity(`Sent feedback`);
@@ -160,14 +219,13 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
         
         {/* Title */}
         <div className="text-center mb-10 md:mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Welcome, {user.name}!</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Welcome, {getUserName()}!</h1>
             <p className="text-gray-500 text-lg">What is your main focus for today?</p>
         </div>
 
-        {/* --- INPUT SECTION (RESPONSIVE FIX) --- */}
+        {/* --- INPUT SECTION --- */}
         <div className="w-full flex flex-col md:flex-row gap-3 mb-10 md:mb-12">
             
-            {/* 1. Text Input (Full width on mobile, Flex on desktop) */}
             <input 
               type="text" 
               value={newTask}
@@ -177,7 +235,6 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
               className="w-full md:flex-1 bg-white text-black rounded-xl px-6 py-4 text-lg outline-none focus:ring-4 focus:ring-purple-900/50 placeholder-gray-400 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
             />
             
-            {/* 2. Button Group (Side-by-side on mobile, Flex on desktop) */}
             <div className="flex gap-3 w-full md:w-auto">
                 <button 
                   onClick={() => setIsTimePickerOpen(true)}
@@ -201,7 +258,9 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
 
         {/* --- TASK LIST --- */}
         <div className="w-full max-h-[45vh] overflow-y-auto no-scrollbar pr-1">
-            {tasks.length === 0 ? (
+            {loading ? (
+                <div className="text-center py-10 text-gray-500 animate-pulse">Loading tasks...</div>
+            ) : tasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 md:py-16 border-2 border-dashed border-neutral-900 rounded-3xl bg-neutral-950/50">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-neutral-900 rounded-3xl flex items-center justify-center mb-6">
                 <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,7 +274,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
             tasks.map(task => (
                 <div key={task.id} className="group flex items-start gap-4 py-5 md:py-6 border-b border-neutral-800 hover:border-neutral-700 transition-colors animate-fade-in">
                 
-                <button onClick={() => toggleTask(task.id)} className="mt-1 flex-shrink-0 transition-transform active:scale-95">
+                <button onClick={() => toggleTask(task.id, task.completed, task.content)} className="mt-1 flex-shrink-0 transition-transform active:scale-95">
                     {task.completed ? (
                     <svg className="w-6 h-6 text-[#6200ea]" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
