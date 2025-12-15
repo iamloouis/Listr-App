@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+/* Basic resets */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Custom Styles */
+.strikethrough { text-decoration: line-through; opacity: 0.4; }
+.modal-backdrop { backdrop-filter: blur(8px); }
+input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+/* --- NEW: Hide Scrollbar but keep functionality --- */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
