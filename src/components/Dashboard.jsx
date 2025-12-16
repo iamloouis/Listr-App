@@ -62,8 +62,16 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
     localStorage.setItem('listr_activity', JSON.stringify(updatedLog));
   };
 
-  const getUserName = () => {
-    // Fallback since we changed how user is passed
+const getUserName = () => {
+    // 1. Try to get the name from metadata (Saved during sign up)
+    if (user.user_metadata && user.user_metadata.first_name) {
+        return user.user_metadata.first_name;
+    }
+    // 2. Try to get full name (Google Auth usually provides this)
+    if (user.user_metadata && user.user_metadata.full_name) {
+        return user.user_metadata.full_name.split(' ')[0]; // Just first name
+    }
+    // 3. Fallback to email
     return user.email ? user.email.split('@')[0] : 'User';
   };
 

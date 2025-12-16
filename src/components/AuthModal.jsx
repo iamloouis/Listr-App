@@ -3,12 +3,29 @@ import { supabase } from '../supabaseClient';
 
 export default function AuthModal({ isOpen, onClose }) {
   const [isLogin, setIsLogin] = useState(true);
+  
+  // Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   if (!isOpen) return null;
+
+  // Reset form when switching modes
+  const switchMode = () => {
+    setIsLogin(!isLogin);
+    setError(null);
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setFirstName('');
+    setLastName('');
+  };
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -17,20 +34,37 @@ export default function AuthModal({ isOpen, onClose }) {
 
     try {
       if (isLogin) {
-        // LOGIN LOGIC
+        // --- LOGIN LOGIC ---
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
       } else {
-        // SIGN UP LOGIC
+        // --- SIGN UP LOGIC ---
+        
+        // 1. Validation
+        if (password !== confirmPassword) {
+            throw new Error("Passwords do not match");
+        }
+        if (!firstName.trim() || !lastName.trim()) {
+            throw new Error("Please enter your full name");
+        }
+
+        // 2. Supabase Sign Up with Metadata
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              first_name: firstName,
+              last_name: lastName,
+              full_name: `${firstName} ${lastName}`
+            }
+          }
         });
         if (error) throw error;
-        alert('Check your email for the confirmation link!');
+        alert('Account created! Check your email to confirm.');
       }
       onClose();
     } catch (error) {
@@ -53,7 +87,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-neutral-900 w-full max-w-sm p-8 rounded-3xl border border-neutral-800 shadow-2xl relative">
+      <div className="bg-neutral-900 w-full max-w-sm p-8 rounded-3xl border border-neutral-800 shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-white">✕</button>
         
         <h2 className="text-2xl font-bold text-white mb-2 text-center">
@@ -89,17 +123,41 @@ export default function AuthModal({ isOpen, onClose }) {
             <div className="h-[1px] bg-neutral-800 flex-1"></div>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
+        <form onSubmit={handleAuth} className="space-y-3">
+          
+          {/* --- NEW: NAME FIELDS (Only for Sign Up) --- */}
+          {!isLogin && (
+            <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-colors"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-colors"
+                  required
+                />
+            </div>
+          )}
+
           <div>
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-colors"
-              required={!isLogin} // Only required for signup/email login flow
+              required
             />
           </div>
+          
           <div>
             <input
               type="password"
@@ -107,21 +165,35 @@ export default function AuthModal({ isOpen, onClose }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-colors"
-              required={!isLogin}
+              required
             />
           </div>
+
+          {/* --- NEW: CONFIRM PASSWORD (Only for Sign Up) --- */}
+          {!isLogin && (
+             <div>
+               <input
+                 type="password"
+                 placeholder="Confirm Password"
+                 value={confirmPassword}
+                 onChange={(e) => setConfirmPassword(e.target.value)}
+                 className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-colors"
+                 required
+               />
+             </div>
+          )}
           
           <button 
             disabled={loading}
-            className="w-full bg-[#6600FF] hover:bg-[#5000c2] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-purple-900/20 disabled:opacity-50"
+            className="w-full bg-[#6600FF] hover:bg-[#5000c2] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-purple-900/20 disabled:opacity-50 mt-2"
           >
-            {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
+            {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <button 
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={switchMode}
             className="text-gray-400 text-sm hover:text-white transition-colors"
           >
             {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
