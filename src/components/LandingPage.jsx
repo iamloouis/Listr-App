@@ -4,7 +4,7 @@ export default function LandingPage({ onOpenAuth }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a] text-white font-sans">
       
-      {/* Navbar - Updated with Login/Sign Up Buttons */}
+      {/* Navbar */}
       <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-40 w-[90%] max-w-2xl">
         <div className="flex justify-between items-center pl-4 pr-2 py-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full w-full shadow-2xl shadow-black/50">
           
@@ -18,16 +18,16 @@ export default function LandingPage({ onOpenAuth }) {
             <span className="text-base font-bold tracking-tight text-white ml-1">Listr</span>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - UPDATED TO PASS MODE */}
           <div className="flex items-center gap-2">
             <button 
-              onClick={onOpenAuth} 
+              onClick={() => onOpenAuth('login')} 
               className="text-sm font-medium text-gray-300 hover:text-white px-4 py-2 transition-colors"
             >
               Login
             </button>
             <button 
-              onClick={onOpenAuth} 
+              onClick={() => onOpenAuth('signup')} 
               className="text-sm font-bold bg-white text-black px-5 py-2.5 rounded-full hover:bg-gray-200 transition-all shadow-lg shadow-black/20"
             >
               Sign Up
@@ -43,18 +43,19 @@ export default function LandingPage({ onOpenAuth }) {
             <span className="text-sm font-medium text-gray-300">Simple. Focused. Effective.</span>
         </div>
         <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-gray-500">
-          Your daily ultimate<br />
-          <span className="text-purple-400"> productivity partner.</span>
+          Get More Done<br />
+          <span className="text-purple-400">With Less Hassle</span>
         </h1>
         <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-          Manage your tasks efficient and get more done with less hassle
+          The minimalist productivity tool that bridges the gap between complex project management and sticky notes. Stay focused. Work fast.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={onOpenAuth} className="px-8 py-4 bg-white text-black rounded-2xl hover:bg-gray-200 font-semibold text-lg transition-all shadow-xl shadow-white/10 flex items-center justify-center gap-2">
+            {/* UPDATED BUTTONS TO PASS MODE */}
+            <button onClick={() => onOpenAuth('signup')} className="px-8 py-4 bg-white text-black rounded-2xl hover:bg-gray-200 font-semibold text-lg transition-all shadow-xl shadow-white/10 flex items-center justify-center gap-2">
                 Start For Free
             </button>
-            <button onClick={onOpenAuth} className="px-8 py-4 bg-white/5 text-white rounded-2xl hover:bg-white/10 font-semibold text-lg transition-all border border-white/10 backdrop-blur-sm">
+            <button onClick={() => onOpenAuth('login')} className="px-8 py-4 bg-white/5 text-white rounded-2xl hover:bg-white/10 font-semibold text-lg transition-all border border-white/10 backdrop-blur-sm">
                 I have an account
             </button>
         </div>

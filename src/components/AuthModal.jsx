@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   const [isLogin, setIsLogin] = useState(true);
   
   // Form State
@@ -14,17 +14,21 @@ export default function AuthModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // NEW: Reset state and set correct mode whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setIsLogin(initialMode === 'login');
+      setError(null);
+      // Optional: Clear fields on reopen if you prefer
+      // setEmail(''); setPassword('');
+    }
+  }, [isOpen, initialMode]);
+
   if (!isOpen) return null;
 
-  // Reset form when switching modes
   const switchMode = () => {
     setIsLogin(!isLogin);
     setError(null);
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setFirstName('');
-    setLastName('');
   };
 
   const handleAuth = async (e) => {
@@ -42,8 +46,6 @@ export default function AuthModal({ isOpen, onClose }) {
         if (error) throw error;
       } else {
         // --- SIGN UP LOGIC ---
-        
-        // 1. Validation
         if (password !== confirmPassword) {
             throw new Error("Passwords do not match");
         }
@@ -51,7 +53,6 @@ export default function AuthModal({ isOpen, onClose }) {
             throw new Error("Please enter your full name");
         }
 
-        // 2. Supabase Sign Up with Metadata
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -125,7 +126,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
         <form onSubmit={handleAuth} className="space-y-3">
           
-          {/* --- NEW: NAME FIELDS (Only for Sign Up) --- */}
+          {/* NAME FIELDS (Only for Sign Up) */}
           {!isLogin && (
             <div className="grid grid-cols-2 gap-3">
                 <input
@@ -169,7 +170,7 @@ export default function AuthModal({ isOpen, onClose }) {
             />
           </div>
 
-          {/* --- NEW: CONFIRM PASSWORD (Only for Sign Up) --- */}
+          {/* CONFIRM PASSWORD (Only for Sign Up) */}
           {!isLogin && (
              <div>
                <input

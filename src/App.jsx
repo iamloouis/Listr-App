@@ -1,21 +1,20 @@
 import { useState, useEffect } from 'react';
-import { supabase } from './supabaseClient'; // Import the connection
+import { supabase } from './supabaseClient';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import AuthModal from './components/AuthModal';
 import './App.css';
 
 function App() {
-  const [session, setSession] = useState(null); // Stores the logged-in user
+  const [session, setSession] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // NEW: Tracks 'login' or 'signup'
 
   useEffect(() => {
-    // 1. Check active session when app loads
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    // 2. Listen for changes (login, logout, signup)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -29,20 +28,30 @@ function App() {
     await supabase.auth.signOut();
   };
 
+  // NEW: specific handler to set mode before opening
+  const handleOpenAuth = (mode = 'login') => {
+    setAuthMode(mode);
+    setIsAuthOpen(true);
+  };
+
   return (
     <>
-{session ? (
-  <Dashboard 
-    key={session.user.id} // Forces a refresh when user changes
-    user={session.user}   // <--- CHANGE THIS: Pass the whole user object
-    onLogout={handleLogout} 
-  />
-) : (
+      {session ? (
+        <Dashboard 
+          key={session.user.id} 
+          user={session.user} 
+          onLogout={handleLogout} 
+        />
+      ) : (
         <>
-          <LandingPage onOpenAuth={() => setIsAuthOpen(true)} />
+          {/* Pass the new handler to LandingPage */}
+          <LandingPage onOpenAuth={handleOpenAuth} />
+          
+          {/* Pass the mode to AuthModal */}
           <AuthModal 
             isOpen={isAuthOpen} 
             onClose={() => setIsAuthOpen(false)} 
+            initialMode={authMode} 
           />
         </>
       )}
