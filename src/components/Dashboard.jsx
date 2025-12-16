@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient'; // Cloud connection
+import { supabase } from '../supabaseClient';
 // --- MUI IMPORTS ---
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { StaticTimePicker } from '@mui/x-date-pickers/StaticTimePicker';
+import { useMediaQuery } from '@mui/material'; // <--- NEW IMPORT
 import dayjs from 'dayjs';
 
 export default function Dashboard({ user, onLogout, onNavigate }) {
+  // --- RESPONSIVE CHECK ---
+  // Returns "true" if the screen is narrower than 768px (Mobile/Tablet)
+  const isMobile = useMediaQuery('(max-width:768px)'); 
+
   // --- STATE ---
-  const [tasks, setTasks] = useState([]); // Empty initially, fetches from cloud
-  const [loading, setLoading] = useState(true); // Loading state
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activityLog, setActivityLog] = useState(() => {
-    // Keep activity log local for now (or move to DB later)
     const saved = localStorage.getItem('listr_activity');
     return saved ? JSON.parse(saved) : [];
   });
@@ -63,20 +67,16 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
   };
 
   const getUserName = () => {
-    // 1. Try to get the name from metadata (Saved during sign up)
     if (user.user_metadata && user.user_metadata.first_name) {
         return user.user_metadata.first_name;
     }
-    // 2. Try to get full name (Google Auth usually provides this)
     if (user.user_metadata && user.user_metadata.full_name) {
-        return user.user_metadata.full_name.split(' ')[0]; // Just first name
+        return user.user_metadata.full_name.split(' ')[0]; 
     }
-    // 3. Fallback to email
     return user.email ? user.email.split('@')[0] : 'User';
   };
 
-  // --- ACTIONS (CLOUD CONNECTED) ---
-
+  // --- ACTIONS ---
   const handleAddTask = async () => {
     if (!newTask.trim()) return;
     
@@ -85,19 +85,16 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
     try {
       const { data, error } = await supabase
         .from('tasks')
-        .insert([
-          { 
+        .insert([{ 
             content: newTask, 
             time: formattedTime, 
-            user_id: user.id, // Link task to this user
+            user_id: user.id, 
             completed: false 
-          }
-        ])
+        }])
         .select();
 
       if (error) throw error;
 
-      // Update UI immediately with data from server
       setTasks([data[0], ...tasks]);
       addActivity(`Added task: "${newTask}"`);
       setNewTask('');
@@ -110,7 +107,6 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
 
   const toggleTask = async (id, currentStatus, content) => {
     try {
-      // Optimistic update (update UI before server responds)
       setTasks(tasks.map(t => t.id === id ? { ...t, completed: !currentStatus } : t));
 
       const { error } = await supabase
@@ -122,7 +118,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
       addActivity(`${!currentStatus ? 'Completed' : 'Unchecked'}: "${content}"`);
     } catch (error) {
       alert('Error updating task');
-      fetchTasks(); // Revert on error
+      fetchTasks();
     }
   };
 
@@ -171,8 +167,6 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
 
   const saveThought = async () => {
     if (!thoughtText.trim()) return;
-    
-    // UPDATED FORMSPREE ENDPOINT
     const FORM_ENDPOINT = "https://formspree.io/f/xldqkdaz"; 
 
     try {
@@ -346,15 +340,17 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
         </div>
       </footer>
 
-      {/* --- STATIC TIME PICKER MODAL --- */}
+      {/* --- RESPONSIVE TIME PICKER MODAL --- */}
       {isTimePickerOpen && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsTimePickerOpen(false)}>
-            <div className="bg-neutral-900 rounded-3xl p-6 overflow-hidden shadow-2xl border border-neutral-800 max-w-full overflow-x-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-neutral-900 rounded-3xl p-4 md:p-6 overflow-hidden shadow-2xl border border-neutral-800 max-w-full" onClick={e => e.stopPropagation()}>
                 <h3 className="text-white font-bold text-center mb-4 text-xl">Pick a Time</h3>
                 <div className="rounded-2xl overflow-hidden bg-[#171717]">
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <StaticTimePicker
-                            orientation="landscape"
+                            // --- MAGIC LINE: Switches to portrait on mobile ---
+                            orientation={isMobile ? 'portrait' : 'landscape'}
+                            
                             value={newTaskTime || dayjs()}
                             onChange={(newValue) => setNewTaskTime(newValue)}
                             onAccept={() => setIsTimePickerOpen(false)}
