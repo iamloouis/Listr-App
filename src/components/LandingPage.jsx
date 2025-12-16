@@ -42,20 +42,20 @@ export default function LandingPage({ onOpenAuth, onNavigate }) {
             <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
             <span className="text-sm font-medium text-gray-300">Simple. Focused. Effective.</span>
         </div>
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-gray-500">
-          Get More Done<br />
-          <span className="text-purple-400">With Less Hassle</span>
+        
+        {/* --- UPDATED HEADLINE --- */}
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight text-white">
+          Get <span className="text-purple-400">Sh!t Done</span>
         </h1>
+        
+        {/* --- UPDATED SUBTEXT --- */}
         <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-          The minimalist productivity tool that bridges the gap between complex project management and sticky notes. Stay focused. Work fast.
+          A smarter way to manage tasks without drowning in features.
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex justify-center">
             <button onClick={() => onOpenAuth('signup')} className="px-8 py-4 bg-white text-black rounded-2xl hover:bg-gray-200 font-semibold text-lg transition-all shadow-xl shadow-white/10 flex items-center justify-center gap-2">
                 Start For Free
-            </button>
-            <button onClick={() => onOpenAuth('login')} className="px-8 py-4 bg-white/5 text-white rounded-2xl hover:bg-white/10 font-semibold text-lg transition-all border border-white/10 backdrop-blur-sm">
-                I have an account
             </button>
         </div>
 
@@ -123,7 +123,7 @@ export default function LandingPage({ onOpenAuth, onNavigate }) {
           </div>
       </section>
 
-      {/* --- DASHBOARD STYLE FOOTER --- */}
+      {/* Footer */}
       <footer className="w-full border-t border-neutral-900 py-8 mt-auto bg-black relative z-10">
         <div className="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-600 text-sm">© 2025 Listr App. All rights reserved.</p>

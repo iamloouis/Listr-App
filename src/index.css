@@ -2,15 +2,26 @@
 
 /* Basic resets */
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* UPDATE: Set Quicksand as the default font variable */
+  font-family: 'Quicksand', sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  
+  /* Make text look crisp on Mac/iOS */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: black; /* Ensures background is black even on overscroll */
+}
+
+/* --- OPTIONAL: Make buttons slightly thicker for that premium app feel --- */
+button {
+  font-weight: 500; 
 }
 
 /* Custom Styles */
@@ -18,7 +29,7 @@ body {
 .modal-backdrop { backdrop-filter: blur(8px); }
 input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 
-/* --- NEW: Hide Scrollbar but keep functionality --- */
+/* --- Hide Scrollbar but keep functionality --- */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

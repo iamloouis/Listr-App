@@ -5,7 +5,12 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        // This overrides the default font for the whole app
+        sans: ['Quicksand', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 }
