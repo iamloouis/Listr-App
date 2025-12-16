@@ -1,10 +1,11 @@
 import React from 'react';
+import DotGrid from './DotGrid'; // Import the animation component
 
 export default function LandingPage({ onOpenAuth, onNavigate }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a] text-white font-sans flex flex-col">
+    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex flex-col relative overflow-x-hidden">
       
-      {/* Navbar */}
+      {/* --- NAVBAR --- */}
       <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-40 w-[90%] max-w-2xl">
         <div className="flex justify-between items-center pl-4 pr-2 py-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full w-full shadow-2xl shadow-black/50">
           
@@ -36,31 +37,43 @@ export default function LandingPage({ onOpenAuth, onNavigate }) {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-6 pt-40 pb-24 md:pt-48 md:pb-36 text-center relative z-10">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full mb-8 shadow-inner shadow-white/5">
+      {/* --- HERO SECTION --- */}
+      <section className="relative w-full max-w-6xl mx-auto px-6 pt-40 pb-24 md:pt-48 md:pb-36 text-center z-10">
+        
+        {/* INTERACTIVE BACKGROUND (Updated Opacity to 90%) */}
+        <DotGrid 
+            baseColor="#262626"    
+            activeColor="#6600FF"  
+            dotSize={2} 
+            gap={32} 
+            className="opacity-90" 
+        />
+
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full mb-8 shadow-inner shadow-white/5 relative z-20">
             <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
             <span className="text-sm font-medium text-gray-300">Simple. Focused. Effective.</span>
         </div>
         
-        {/* --- UPDATED HEADLINE --- */}
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight text-white">
+        {/* Headline */}
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight text-white relative z-20">
           Get <span className="text-purple-400">Sh!t Done</span>
         </h1>
         
-        {/* --- UPDATED SUBTEXT --- */}
-        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+        {/* Subtext */}
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed relative z-20">
           A smarter way to manage tasks without drowning in features.
         </p>
         
-        <div className="flex justify-center">
+        {/* CTA Button */}
+        <div className="flex justify-center relative z-20">
             <button onClick={() => onOpenAuth('signup')} className="px-8 py-4 bg-white text-black rounded-2xl hover:bg-gray-200 font-semibold text-lg transition-all shadow-xl shadow-white/10 flex items-center justify-center gap-2">
                 Start For Free
             </button>
         </div>
 
-        {/* App Preview */}
-        <div className="mt-24 flex justify-center relative">
+        {/* App Preview Image/Card */}
+        <div className="mt-24 flex justify-center relative z-20">
             <div className="absolute -inset-4 bg-purple-500/20 blur-3xl rounded-full opacity-30"></div>
             <div className="bg-neutral-950/80 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl shadow-black/50 max-w-xl w-full border border-white/10 text-left relative">
                 <div className="flex items-center gap-2 mb-6">
@@ -92,7 +105,7 @@ export default function LandingPage({ onOpenAuth, onNavigate }) {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* --- FEATURES SECTION --- */}
       <section className="max-w-6xl mx-auto px-6 py-24 relative z-10 flex-1">
           <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Built for productivity</h2>
@@ -123,7 +136,7 @@ export default function LandingPage({ onOpenAuth, onNavigate }) {
           </div>
       </section>
 
-      {/* Footer */}
+      {/* --- UNIFIED FOOTER --- */}
       <footer className="w-full border-t border-neutral-900 py-8 mt-auto bg-black relative z-10">
         <div className="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-600 text-sm">© 2025 Listr App. All rights reserved.</p>
