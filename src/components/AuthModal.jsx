@@ -14,13 +14,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // NEW: Reset state and set correct mode whenever modal opens
+  // Reset state and set correct mode whenever modal opens
   useEffect(() => {
     if (isOpen) {
       setIsLogin(initialMode === 'login');
       setError(null);
-      // Optional: Clear fields on reopen if you prefer
-      // setEmail(''); setPassword('');
     }
   }, [isOpen, initialMode]);
 
@@ -75,10 +73,16 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     }
   };
 
+  // --- UPDATED GOOGLE LOGIN HANDLER ---
   const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          // This automatically detects if you are on localhost or vercel
+          // and redirects you back to the correct site.
+          redirectTo: window.location.origin 
+        }
       });
       if (error) throw error;
     } catch (error) {
@@ -115,7 +119,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05"/>
                 <path d="M12 4.63c1.61 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.19 14.97 0 12 0 7.7 0 3.99 2.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Sign in with Google
+            {isLogin ? 'Sign in with Google' : 'Sign up with Google'}
         </button>
 
         <div className="flex items-center gap-3 mb-4">
