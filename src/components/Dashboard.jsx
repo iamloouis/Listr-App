@@ -62,7 +62,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
     localStorage.setItem('listr_activity', JSON.stringify(updatedLog));
   };
 
-const getUserName = () => {
+  const getUserName = () => {
     // 1. Try to get the name from metadata (Saved during sign up)
     if (user.user_metadata && user.user_metadata.first_name) {
         return user.user_metadata.first_name;
@@ -171,14 +171,21 @@ const getUserName = () => {
 
   const saveThought = async () => {
     if (!thoughtText.trim()) return;
-    const FORM_ENDPOINT = "https://formspree.io/f/YOUR_UNIQUE_ID_HERE"; 
+    
+    // UPDATED FORMSPREE ENDPOINT
+    const FORM_ENDPOINT = "https://formspree.io/f/xldqkdaz"; 
 
     try {
       const response = await fetch(FORM_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: thoughtText, user: user.email })
+        body: JSON.stringify({ 
+            message: thoughtText, 
+            email: user.email,
+            name: getUserName() 
+        })
       });
+      
       if (response.ok) {
         addActivity(`Sent feedback`);
         setThoughtText('');
