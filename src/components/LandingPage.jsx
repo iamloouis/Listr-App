@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function LandingPage({ onOpenAuth }) {
+export default function LandingPage({ onOpenAuth, onNavigate }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a] text-white font-sans">
       
@@ -18,7 +18,7 @@ export default function LandingPage({ onOpenAuth }) {
             <span className="text-base font-bold tracking-tight text-white ml-1">Listr</span>
           </div>
 
-          {/* Action Buttons - UPDATED TO PASS MODE */}
+          {/* Action Buttons */}
           <div className="flex items-center gap-2">
             <button 
               onClick={() => onOpenAuth('login')} 
@@ -51,7 +51,6 @@ export default function LandingPage({ onOpenAuth }) {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {/* UPDATED BUTTONS TO PASS MODE */}
             <button onClick={() => onOpenAuth('signup')} className="px-8 py-4 bg-white text-black rounded-2xl hover:bg-gray-200 font-semibold text-lg transition-all shadow-xl shadow-white/10 flex items-center justify-center gap-2">
                 Start For Free
             </button>
@@ -136,9 +135,9 @@ export default function LandingPage({ onOpenAuth }) {
                   <span className="text-lg font-bold tracking-tight text-white">Listr</span>
               </div>
               <div className="flex gap-8 text-sm font-medium text-gray-400">
-                <a href="#" className="hover:text-white transition-colors">Privacy</a>
-                <a href="#" className="hover:text-white transition-colors">Terms</a>
-                <a href="#" className="hover:text-white transition-colors">Contact</a>
+                <button onClick={() => onNavigate('privacy')} className="hover:text-white transition-colors">Privacy</button>
+                <button onClick={() => onNavigate('terms')} className="hover:text-white transition-colors">Terms</button>
+                <button onClick={() => onNavigate('contact')} className="hover:text-white transition-colors">Contact</button>
               </div>
               <span className="text-gray-500 text-sm">© 2025 Listr. All rights reserved.</span>
           </div>
