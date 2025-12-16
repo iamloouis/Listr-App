@@ -42,22 +42,16 @@ export default function Terms({ onOpenAuth, onNavigate }) {
         </div>
       </div>
 
-      {/* --- FOOTER --- */}
-      <footer className="border-t border-white/10 py-12 mt-auto bg-black/20 backdrop-blur-md">
-          <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-black rounded-xl flex items-center justify-center shadow-lg shadow-black/20 text-white font-bold">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                  </div>
-                  <span className="text-lg font-bold tracking-tight text-white">Listr</span>
-              </div>
-              <div className="flex gap-8 text-sm font-medium text-gray-400">
-                <button onClick={() => onNavigate('privacy')} className="hover:text-white transition-colors">Privacy</button>
-                <button onClick={() => onNavigate('terms')} className="hover:text-white transition-colors text-white">Terms</button>
-                <button onClick={() => onNavigate('contact')} className="hover:text-white transition-colors">Contact</button>
-              </div>
-              <span className="text-gray-500 text-sm">© 2025 Listr. All rights reserved.</span>
-          </div>
+      {/* --- UNIFIED FOOTER --- */}
+      <footer className="w-full border-t border-neutral-900 py-8 mt-auto bg-black relative z-10">
+        <div className="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-gray-600 text-sm">© 2025 Listr App. All rights reserved.</p>
+            <div className="flex gap-6 text-sm text-gray-500">
+                <button onClick={() => onNavigate('privacy')} className="hover:text-white transition">Privacy</button>
+                <button onClick={() => onNavigate('terms')} className="hover:text-white transition">Terms</button>
+                <button onClick={() => onNavigate('contact')} className="hover:text-white transition">Contact</button>
+            </div>
+        </div>
       </footer>
     </div>
   );

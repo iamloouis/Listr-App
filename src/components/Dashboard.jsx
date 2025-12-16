@@ -4,12 +4,11 @@ import { supabase } from '../supabaseClient';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { StaticTimePicker } from '@mui/x-date-pickers/StaticTimePicker';
-import { useMediaQuery } from '@mui/material'; // <--- NEW IMPORT
+import { useMediaQuery } from '@mui/material'; 
 import dayjs from 'dayjs';
 
 export default function Dashboard({ user, onLogout, onNavigate }) {
   // --- RESPONSIVE CHECK ---
-  // Returns "true" if the screen is narrower than 768px (Mobile/Tablet)
   const isMobile = useMediaQuery('(max-width:768px)'); 
 
   // --- STATE ---
@@ -336,6 +335,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
             <div className="flex gap-6 text-sm text-gray-500">
                 <button onClick={() => onNavigate('privacy')} className="hover:text-white transition">Privacy</button>
                 <button onClick={() => onNavigate('terms')} className="hover:text-white transition">Terms</button>
+                <button onClick={() => onNavigate('contact')} className="hover:text-white transition">Contact</button>
             </div>
         </div>
       </footer>
