@@ -46,7 +46,7 @@ export default function LandingPage({ onOpenAuth, onNavigate }) {
             activeColor="#6600FF"  
             dotSize={2} 
             gap={32} 
-            className="opacity-90" 
+            className="opacity-100" 
         />
 
         {/* Badge */}
