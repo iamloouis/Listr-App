@@ -1,16 +1,38 @@
-# React + Vite
+# Listr ⚡️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Simple. Focused. Effective.**
 
-Currently, two official plugins are available:
+Listr is a minimalist, high-performance productivity dashboard designed to help you cut through the noise and **Get Sh!t Done**. Built for modern creators who need focus, not features.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![App Screenshot](/public/screenshot.png)
+_(Note: Ensure you have a screenshot.png in your public folder for this to render)_
 
-## React Compiler
+## 🚀 Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Distraction-Free Interface:** A sleek, "Dark by Design" UI built with **Tailwind CSS** and the **Quicksand** typeface.
+- **Real-Time Sync:** Tasks, edits, and deletions sync instantly across devices using **Supabase**.
+- **Secure Authentication:** Supports Email/Password and Google OAuth via Supabase Auth.
+- **Smart Activity Log:** Automatically tracks your productivity history locally.
+- **Daily Insights:** Visual progress ring and task completion stats.
+- **Interactive Landing Page:** High-end background animations powered by **GSAP**.
+- **Feedback Integration:** Direct email feedback loop using **Formspree**.
+- **Fully Responsive:** optimized mobile experience with touch-friendly time pickers.
 
-## Expanding the ESLint configuration
+## 🛠 Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Frontend:** [React](https://reactjs.org/) + [Vite](https://vitejs.dev/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) + [Material UI (Time Picker)](https://mui.com/)
+- **Backend / Database:** [Supabase](https://supabase.com/) (PostgreSQL)
+- **Animations:** [GSAP](https://greensock.com/gsap/)
+- **Deployment:** [Vercel](https://vercel.com/)
+
+## 📦 Getting Started
+
+Follow these steps to run Listr locally on your machine.
+
+### 1. Clone the repository
+
+```bash
+git clone [https://github.com/iamloouis/listr.git](https://github.com/iamloouis/listr.git)
+cd listr
+```
