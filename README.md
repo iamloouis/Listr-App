@@ -5,7 +5,6 @@
 Listr is a minimalist, high-performance productivity dashboard designed to help you cut through the noise and **Get Sh!t Done**. Built for modern creators who need focus, not features.
 
 ![App Screenshot](/public/screenshot.png)
-_(Note: Ensure you have a screenshot.png in your public folder for this to render)_
 
 ## 🚀 Features
 
