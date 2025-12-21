@@ -35,9 +35,41 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [activeNote, setActiveNote] = useState(null);
 
-  // --- NEW: REMINDER STATE ---
-  const [reminder, setReminder] = useState(null); // Stores the task triggering the reminder
-  const [remindedTaskIds, setRemindedTaskIds] = useState([]); // Keeps track of tasks we already alerted
+  // --- REMINDER STATE ---
+  const [reminder, setReminder] = useState(null); 
+  const [remindedTaskIds, setRemindedTaskIds] = useState([]); 
+
+  // --- HELPERS ---
+  const getUserName = () => {
+    if (user.user_metadata && user.user_metadata.first_name) {
+        return user.user_metadata.first_name;
+    }
+    if (user.user_metadata && user.user_metadata.full_name) {
+        return user.user_metadata.full_name.split(' ')[0]; 
+    }
+    return user.email ? user.email.split('@')[0] : 'User';
+  };
+
+  // --- NEW: VOICE ASSISTANT FUNCTION ---
+  const speakNotification = (taskName) => {
+    if ('speechSynthesis' in window) {
+        // 1. Cancel any currently playing speech to avoid overlap
+        window.speechSynthesis.cancel();
+
+        // 2. Construct the sentence
+        const text = `Hey ${getUserName()}, you have 5 minutes to get ${taskName} done.`;
+        
+        // 3. Create the utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Optional: Tweak settings (Rate: 0.1 to 10, Pitch: 0 to 2)
+        utterance.rate = 1; 
+        utterance.pitch = 1;
+        
+        // 4. Speak
+        window.speechSynthesis.speak(utterance);
+    }
+  };
 
   // --- 1. FETCH DATA ON LOAD ---
   useEffect(() => {
@@ -45,7 +77,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
     fetchActivities(); 
   }, []);
 
-  // --- NEW: TIME CHECKER (Runs every 30 seconds) ---
+  // --- TIME CHECKER (Runs every 30 seconds) ---
   useEffect(() => {
     const checkReminders = () => {
         const now = dayjs();
@@ -54,7 +86,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
             // 1. Skip if completed, no time set, or already reminded
             if (task.completed || !task.time || remindedTaskIds.includes(task.id)) return;
 
-            // 2. Parse the task time (e.g., "2:30 pm") assuming it's for TODAY
+            // 2. Parse the task time
             const taskTime = dayjs(task.time, 'h:mm a');
             
             // 3. Check if it's valid date
@@ -63,10 +95,13 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
             // 4. Calculate difference in minutes
             const diffMinutes = taskTime.diff(now, 'minute');
 
-            // 5. Trigger if exactly 5 minutes remaining (accepting 4-5 min window)
+            // 5. Trigger if exactly 5 minutes remaining
             if (diffMinutes === 5) {
                 setReminder(task);
                 setRemindedTaskIds(prev => [...prev, task.id]); // Mark as reminded
+                
+                // --- TRIGGER VOICE ---
+                speakNotification(task.content);
             }
         });
     };
@@ -124,16 +159,6 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
     } catch (error) {
         console.error('Error logging activity:', error);
     }
-  };
-
-  const getUserName = () => {
-    if (user.user_metadata && user.user_metadata.first_name) {
-        return user.user_metadata.first_name;
-    }
-    if (user.user_metadata && user.user_metadata.full_name) {
-        return user.user_metadata.full_name.split(' ')[0]; 
-    }
-    return user.email ? user.email.split('@')[0] : 'User';
   };
 
   // --- ACTIONS ---
@@ -441,7 +466,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
         </div>
       )}
 
-      {/* --- NEW: FULL SCREEN REMINDER OVERLAY --- */}
+      {/* --- FULL SCREEN REMINDER OVERLAY --- */}
       {reminder && (
         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 animate-fade-in">
              <div className="w-24 h-24 bg-[#6600FF] rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(102,0,255,0.6)] animate-pulse">
