@@ -13,11 +13,8 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
 
   // --- STATE ---
   const [tasks, setTasks] = useState([]);
+  const [activityLog, setActivityLog] = useState([]); // Now Cloud Based
   const [loading, setLoading] = useState(true);
-  const [activityLog, setActivityLog] = useState(() => {
-    const saved = localStorage.getItem('listr_activity');
-    return saved ? JSON.parse(saved) : [];
-  });
 
   // Inputs
   const [newTask, setNewTask] = useState('');
@@ -34,9 +31,10 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [activeNote, setActiveNote] = useState(null);
 
-  // --- 1. FETCH TASKS ON LOAD ---
+  // --- 1. FETCH DATA ON LOAD ---
   useEffect(() => {
     fetchTasks();
+    fetchActivities(); // <--- NEW: Load history from cloud
   }, []);
 
   const fetchTasks = async () => {
@@ -50,19 +48,45 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
       if (error) throw error;
       setTasks(data);
     } catch (error) {
-      alert('Error loading tasks!');
-      console.error(error);
+      console.error('Error fetching tasks:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- HELPERS ---
-  const addActivity = (action) => {
-    const newLog = { action, time: new Date().toISOString() };
-    const updatedLog = [newLog, ...activityLog].slice(0, 50);
-    setActivityLog(updatedLog);
-    localStorage.setItem('listr_activity', JSON.stringify(updatedLog));
+  // --- NEW: FETCH ACTIVITIES FROM DB ---
+  const fetchActivities = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('activities')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50); // Only get last 50
+        
+        if (error) throw error;
+        setActivityLog(data);
+    } catch (error) {
+        console.error('Error fetching activity:', error);
+    }
+  };
+
+  // --- NEW: ADD ACTIVITY TO DB ---
+  const addActivity = async (action) => {
+    try {
+        // 1. Optimistic Update (Show it immediately in UI)
+        const tempLog = { action, created_at: new Date().toISOString() };
+        setActivityLog(prev => [tempLog, ...prev]);
+
+        // 2. Send to Cloud
+        const { error } = await supabase
+            .from('activities')
+            .insert([{ action, user_id: user.id }]);
+
+        if (error) throw error;
+    } catch (error) {
+        console.error('Error logging activity:', error);
+        // If it fails, we quietly ignore it to not disrupt the user
+    }
   };
 
   const getUserName = () => {
@@ -95,7 +119,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
       if (error) throw error;
 
       setTasks([data[0], ...tasks]);
-      addActivity(`Added task: "${newTask}"`);
+      addActivity(`Added task: "${newTask}"`); // <--- Logs to Cloud
       setNewTask('');
       setNewTaskTime(null);
     } catch (error) {
@@ -524,7 +548,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                     </div>
                 </div>
 
-                {/* RECENT ACTIVITY LIST */}
+                {/* RECENT ACTIVITY LIST (Now powered by Supabase) */}
                 <div className="mt-8 text-left">
                     <h4 className="text-gray-400 text-sm font-medium mb-4 uppercase tracking-wider">Today's Activity</h4>
                     <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar">
@@ -534,7 +558,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                             activityLog.map((log, i) => (
                                 <div key={i} className="flex gap-3 items-start text-sm">
                                     <span className="text-gray-600 font-mono text-xs mt-0.5 whitespace-nowrap">
-                                        {new Date(log.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                        {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                     </span>
                                     <span className="text-gray-300 leading-snug">{log.action}</span>
                                 </div>
