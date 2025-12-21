@@ -6,6 +6,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { StaticTimePicker } from '@mui/x-date-pickers/StaticTimePicker';
 import { useMediaQuery } from '@mui/material'; 
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+// Enable the plugin to parse "2:30 pm"
+dayjs.extend(customParseFormat);
 
 export default function Dashboard({ user, onLogout, onNavigate }) {
   // --- RESPONSIVE CHECK ---
@@ -13,7 +17,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
 
   // --- STATE ---
   const [tasks, setTasks] = useState([]);
-  const [activityLog, setActivityLog] = useState([]); // Now Cloud Based
+  const [activityLog, setActivityLog] = useState([]); 
   const [loading, setLoading] = useState(true);
 
   // Inputs
@@ -31,11 +35,49 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [activeNote, setActiveNote] = useState(null);
 
+  // --- NEW: REMINDER STATE ---
+  const [reminder, setReminder] = useState(null); // Stores the task triggering the reminder
+  const [remindedTaskIds, setRemindedTaskIds] = useState([]); // Keeps track of tasks we already alerted
+
   // --- 1. FETCH DATA ON LOAD ---
   useEffect(() => {
     fetchTasks();
-    fetchActivities(); // <--- NEW: Load history from cloud
+    fetchActivities(); 
   }, []);
+
+  // --- NEW: TIME CHECKER (Runs every 30 seconds) ---
+  useEffect(() => {
+    const checkReminders = () => {
+        const now = dayjs();
+        
+        tasks.forEach(task => {
+            // 1. Skip if completed, no time set, or already reminded
+            if (task.completed || !task.time || remindedTaskIds.includes(task.id)) return;
+
+            // 2. Parse the task time (e.g., "2:30 pm") assuming it's for TODAY
+            const taskTime = dayjs(task.time, 'h:mm a');
+            
+            // 3. Check if it's valid date
+            if (!taskTime.isValid()) return;
+
+            // 4. Calculate difference in minutes
+            const diffMinutes = taskTime.diff(now, 'minute');
+
+            // 5. Trigger if exactly 5 minutes remaining (accepting 4-5 min window)
+            if (diffMinutes === 5) {
+                setReminder(task);
+                setRemindedTaskIds(prev => [...prev, task.id]); // Mark as reminded
+            }
+        });
+    };
+
+    // Run immediately then interval
+    checkReminders();
+    const interval = setInterval(checkReminders, 30000); // Check every 30s
+
+    return () => clearInterval(interval);
+  }, [tasks, remindedTaskIds]);
+
 
   const fetchTasks = async () => {
     try {
@@ -54,14 +96,13 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
     }
   };
 
-  // --- NEW: FETCH ACTIVITIES FROM DB ---
   const fetchActivities = async () => {
     try {
         const { data, error } = await supabase
             .from('activities')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(50); // Only get last 50
+            .limit(50); 
         
         if (error) throw error;
         setActivityLog(data);
@@ -70,14 +111,11 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
     }
   };
 
-  // --- NEW: ADD ACTIVITY TO DB ---
   const addActivity = async (action) => {
     try {
-        // 1. Optimistic Update (Show it immediately in UI)
         const tempLog = { action, created_at: new Date().toISOString() };
         setActivityLog(prev => [tempLog, ...prev]);
 
-        // 2. Send to Cloud
         const { error } = await supabase
             .from('activities')
             .insert([{ action, user_id: user.id }]);
@@ -85,7 +123,6 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
         if (error) throw error;
     } catch (error) {
         console.error('Error logging activity:', error);
-        // If it fails, we quietly ignore it to not disrupt the user
     }
   };
 
@@ -119,7 +156,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
       if (error) throw error;
 
       setTasks([data[0], ...tasks]);
-      addActivity(`Added task: "${newTask}"`); // <--- Logs to Cloud
+      addActivity(`Added task: "${newTask}"`); 
       setNewTask('');
       setNewTaskTime(null);
     } catch (error) {
@@ -401,6 +438,36 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                     </LocalizationProvider>
                 </div>
             </div>
+        </div>
+      )}
+
+      {/* --- NEW: FULL SCREEN REMINDER OVERLAY --- */}
+      {reminder && (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 animate-fade-in">
+             <div className="w-24 h-24 bg-[#6600FF] rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(102,0,255,0.6)] animate-pulse">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+             </div>
+             
+             <h2 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-6 tracking-tight">
+                Hey {getUserName()},<br/>it's almost time.
+             </h2>
+             
+             <div className="max-w-2xl bg-white/10 border border-white/10 rounded-3xl p-8 mb-10 backdrop-blur-lg">
+                <p className="text-gray-400 text-lg uppercase tracking-wider font-bold mb-2">Upcoming Task</p>
+                <p className="text-3xl md:text-4xl font-bold text-white leading-tight">{reminder.content}</p>
+                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#6600FF]/20 text-[#6600FF] rounded-full font-bold">
+                    <span>Starts in 5 minutes</span>
+                    <span>•</span>
+                    <span>{reminder.time}</span>
+                </div>
+             </div>
+
+             <button 
+                onClick={() => setReminder(null)}
+                className="px-10 py-4 bg-white text-black font-bold text-lg rounded-full hover:scale-105 transition-transform shadow-xl"
+             >
+                I'm on it
+             </button>
         </div>
       )}
 
