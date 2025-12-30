@@ -50,23 +50,14 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
     return user.email ? user.email.split('@')[0] : 'User';
   };
 
-  // --- NEW: VOICE ASSISTANT FUNCTION ---
+  // --- VOICE ASSISTANT FUNCTION ---
   const speakNotification = (taskName) => {
     if ('speechSynthesis' in window) {
-        // 1. Cancel any currently playing speech to avoid overlap
-        window.speechSynthesis.cancel();
-
-        // 2. Construct the sentence
+        window.speechSynthesis.cancel(); // Stop previous
         const text = `Hey ${getUserName()}, you have 5 minutes to get ${taskName} done.`;
-        
-        // 3. Create the utterance
         const utterance = new SpeechSynthesisUtterance(text);
-        
-        // Optional: Tweak settings (Rate: 0.1 to 10, Pitch: 0 to 2)
         utterance.rate = 1; 
         utterance.pitch = 1;
-        
-        // 4. Speak
         window.speechSynthesis.speak(utterance);
     }
   };
@@ -83,32 +74,23 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
         const now = dayjs();
         
         tasks.forEach(task => {
-            // 1. Skip if completed, no time set, or already reminded
             if (task.completed || !task.time || remindedTaskIds.includes(task.id)) return;
 
-            // 2. Parse the task time
             const taskTime = dayjs(task.time, 'h:mm a');
-            
-            // 3. Check if it's valid date
             if (!taskTime.isValid()) return;
 
-            // 4. Calculate difference in minutes
             const diffMinutes = taskTime.diff(now, 'minute');
 
-            // 5. Trigger if exactly 5 minutes remaining
             if (diffMinutes === 5) {
                 setReminder(task);
-                setRemindedTaskIds(prev => [...prev, task.id]); // Mark as reminded
-                
-                // --- TRIGGER VOICE ---
-                speakNotification(task.content);
+                setRemindedTaskIds(prev => [...prev, task.id]); 
+                speakNotification(task.content); // Trigger Voice
             }
         });
     };
 
-    // Run immediately then interval
     checkReminders();
-    const interval = setInterval(checkReminders, 30000); // Check every 30s
+    const interval = setInterval(checkReminders, 30000); 
 
     return () => clearInterval(interval);
   }, [tasks, remindedTaskIds]);
@@ -192,6 +174,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
 
   const toggleTask = async (id, currentStatus, content) => {
     try {
+      // Optimistic update
       setTasks(tasks.map(t => t.id === id ? { ...t, completed: !currentStatus } : t));
 
       const { error } = await supabase
@@ -366,48 +349,45 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
             </div>
             ) : (
             tasks.map(task => (
-                <div key={task.id} className="group flex items-start gap-4 py-5 md:py-6 border-b border-neutral-800 hover:border-neutral-700 transition-colors animate-fade-in">
+                <div key={task.id} className="group flex items-start justify-between py-5 md:py-6 border-b border-neutral-800 hover:border-neutral-700 transition-colors animate-fade-in">
                 
-                <button onClick={() => toggleTask(task.id, task.completed, task.content)} className="mt-1 flex-shrink-0 transition-transform active:scale-95">
-                    {task.completed ? (
-                    <svg className="w-6 h-6 text-[#6200ea]" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    ) : (
-                    <div className="w-6 h-6 rounded-full border-2 border-neutral-700 hover:border-gray-500 transition-colors"></div>
-                    )}
-                </button>
+                    {/* --- NEW: ANIMATED CHECKBOX STRUCTURE --- */}
+                    <div className="task-item-wrapper flex-1 min-w-0 pr-4">
+                        <input 
+                            type="checkbox" 
+                            id={`task-${task.id}`} 
+                            checked={task.completed} 
+                            onChange={() => toggleTask(task.id, task.completed, task.content)}
+                        />
+                        <label htmlFor={`task-${task.id}`} className="text-lg md:text-xl font-light leading-tight select-none cursor-pointer">
+                            {task.content}
+                        </label>
+                    </div>
+                    {/* ---------------------------------------- */}
                 
-                <div className="flex-1 min-w-0">
-                    <span className={`text-lg md:text-xl font-light block leading-tight break-words ${task.completed ? 'line-through text-gray-600' : 'text-white'}`}>
-                        {task.content}
-                    </span>
+                    <div className="flex flex-col items-end gap-1">
+                        {task.time && (
+                            <span className="text-gray-500 font-mono text-xs md:text-sm whitespace-nowrap">
+                                {task.time}
+                            </span>
+                        )}
 
-                    {task.comments && (
-                        <button 
-                            onClick={() => setActiveNote(task)}
-                            className="mt-2 text-sm text-[#6200ea] hover:text-[#7c4dff] font-medium flex items-center gap-1.5 transition-colors"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                            View Note
-                        </button>
-                    )}
-                </div>
-
-                {task.time && (
-                    <span className="text-gray-500 font-mono text-xs md:text-sm mt-1.5 whitespace-nowrap">
-                        {task.time}
-                    </span>
-                )}
-
-                <div className="flex items-center gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => setTaskToEdit(task)} className="p-2 text-neutral-600 hover:text-white transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                    </button>
-                    <button onClick={() => setTaskToDelete(task.id)} className="p-2 text-neutral-600 hover:text-red-500 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
+                        <div className="flex items-center gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                            {task.comments && (
+                                <button onClick={() => setActiveNote(task)} className="p-2 text-[#6200ea] hover:text-[#7c4dff] transition-colors" title="View Note">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                                </button>
+                            )}
+                            
+                            <button onClick={() => setTaskToEdit(task)} className="p-2 text-neutral-600 hover:text-white transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                            </button>
+                            
+                            <button onClick={() => setTaskToDelete(task.id)} className="p-2 text-neutral-600 hover:text-red-500 transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             ))
             )}
@@ -434,9 +414,8 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                 <div className="rounded-2xl overflow-hidden bg-[#171717]">
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <StaticTimePicker
-                            // --- MAGIC LINE: Switches to portrait on mobile ---
+                            // Switches to portrait on mobile
                             orientation={isMobile ? 'portrait' : 'landscape'}
-                            
                             value={newTaskTime || dayjs()}
                             onChange={(newValue) => setNewTaskTime(newValue)}
                             onAccept={() => setIsTimePickerOpen(false)}
@@ -640,7 +619,7 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
                     </div>
                 </div>
 
-                {/* RECENT ACTIVITY LIST (Now powered by Supabase) */}
+                {/* RECENT ACTIVITY LIST */}
                 <div className="mt-8 text-left">
                     <h4 className="text-gray-400 text-sm font-medium mb-4 uppercase tracking-wider">Today's Activity</h4>
                     <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar">
