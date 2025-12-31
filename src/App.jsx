@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { supabase } from './supabaseClient';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
@@ -68,6 +69,7 @@ function App() {
           />
         </>
       )}
+      <Analytics />
     </>
   );
 }
